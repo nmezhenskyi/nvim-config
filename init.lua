@@ -1,3 +1,3 @@
-require("nikita")
-require("nvim-treesitter.install").prefer_git = true
+require('nikita')
+require('nvim-treesitter.install').prefer_git = true
 
