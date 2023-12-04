@@ -2,7 +2,7 @@
 
 This is my Neovim configuration.
 
-## Pre-requisites
+## Prerequisites
 
 - [ripgrep](https://github.com/BurntSushi/ripgrep)
 
