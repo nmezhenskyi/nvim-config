@@ -1,4 +1,4 @@
-require("nikita.remap")
-require("nikita.packer")
-require("nikita.set")
+require('nikita.remap')
+require('nikita.packer')
+require('nikita.set')
 
