@@ -13,7 +13,6 @@ return require('packer').startup(function(use)
    use('nvim-treesitter/nvim-treesitter', {run = ':TSUpdate'})
    use('nvim-treesitter/playground')
 
-   use('theprimeagen/harpoon')   -- Add files to quick switch list
    use('mbbill/undotree')        -- Undo tree
    use('tpope/vim-fugitive')     -- Git commands support
 
