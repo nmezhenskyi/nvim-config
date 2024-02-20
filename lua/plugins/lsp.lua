@@ -95,6 +95,7 @@ return {
             },
             servers = {
                ["clangd"] = { "c", "cpp" }, 
+               ["gopls"] = { "go" },
             },
          })
 
