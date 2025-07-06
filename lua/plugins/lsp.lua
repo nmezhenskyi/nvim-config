@@ -13,9 +13,10 @@ return {
 
    -- Install & manage LSP servers:
    {
-      "williamboman/mason.nvim",
+      "mason-org/mason.nvim",
       lazy = false,
       config = true,
+      version = "^1.0.0",
    }, -- needs mason-lspconfig to integrate with lspconfig.
    
    -- Autocompletion plugins:
@@ -67,7 +68,7 @@ return {
          { "hrsh7th/cmp-path" },
          { "saadparwaiz1/cmp_luasnip" },
          { "hrsh7th/cmp-nvim-lua" },
-         { "williamboman/mason-lspconfig.nvim" },
+         { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
       },
       config = function()
          local lsp_zero = require("lsp-zero")
