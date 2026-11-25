@@ -1,4 +1,4 @@
-local pack = require("nikita.pack")
+local pack = require("config.pack")
 
 local load_telescope = pack.defer({
    cmd = { "Telescope" },

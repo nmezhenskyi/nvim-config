@@ -182,7 +182,7 @@ vim.api.nvim_create_user_command("PackClean", function()
 end, { desc = "Remove inactive vim.pack plugins from disk" })
 
 -- Expose helper module before loading plugin configs
-package.loaded["nikita.pack"] = M
+package.loaded["config.pack"] = M
 
 require("plugins.colorscheme")
 require("plugins.autoclose")

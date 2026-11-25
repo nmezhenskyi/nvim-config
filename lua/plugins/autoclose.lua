@@ -1,4 +1,4 @@
-local pack = require("nikita.pack")
+local pack = require("config.pack")
 
 pack.on_event("InsertEnter", function()
    pack.load("autoclose.nvim")

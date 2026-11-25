@@ -42,4 +42,3 @@ vim.filetype.add({
 })
 
 -- vim.opt.colorcolumn = "80"
-

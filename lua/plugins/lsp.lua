@@ -1,4 +1,4 @@
-local pack = require("nikita.pack")
+local pack = require("config.pack")
 
 -- Diagnostics: show inline virtual text on the current cursor line only,
 -- truncated to 1 line / 80 chars so the screen stays uncluttered.
@@ -26,7 +26,7 @@ vim.diagnostic.config({
 
 -- Buffer-local LSP keymaps attached whenever any LSP client attaches
 vim.api.nvim_create_autocmd("LspAttach", {
-   group = vim.api.nvim_create_augroup("nikita_lsp_attach", { clear = true }),
+   group = vim.api.nvim_create_augroup("config_lsp_attach", { clear = true }),
    callback = function(ev)
       local opts = { buf = ev.buf, remap = false }
       vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
@@ -49,7 +49,7 @@ local format_on_save_servers = {
 }
 
 vim.api.nvim_create_autocmd("BufWritePre", {
-   group = vim.api.nvim_create_augroup("nikita_lsp_format", { clear = true }),
+   group = vim.api.nvim_create_augroup("config_lsp_format", { clear = true }),
    callback = function(ev)
       local server = format_on_save_servers[vim.bo[ev.buf].filetype]
       if not server then

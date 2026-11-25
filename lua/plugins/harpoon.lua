@@ -1,4 +1,4 @@
-local pack = require("nikita.pack")
+local pack = require("config.pack")
 
 local harpoon
 local function get_harpoon()

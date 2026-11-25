@@ -1,4 +1,4 @@
-local pack = require("nikita.pack")
+local pack = require("config.pack")
 
 local load_fugitive = pack.defer({
    cmd = { "Git", "G" },
