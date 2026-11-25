@@ -1,10 +1,6 @@
-return {
-   -- Autoclosing brackets:
-   "m4xshen/autoclose.nvim",
-   lazy = false,
-   priority = 100,
-   config = function()
-      require('autoclose').setup()
-   end,
-}
+local pack = require("nikita.pack")
 
+pack.on_event("InsertEnter", function()
+   pack.load("autoclose.nvim")
+   require("autoclose").setup()
+end)

@@ -1,0 +1,5 @@
+-- Neovim 0.12 built-in undotree (lazy-loaded on first use)
+vim.keymap.set("n", "<leader>u", function()
+   vim.cmd.packadd("nvim.undotree")
+   require("undotree").open()
+end, { desc = "Toggle Undotree" })

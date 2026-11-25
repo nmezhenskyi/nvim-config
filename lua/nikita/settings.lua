@@ -15,7 +15,10 @@ vim.opt.wrap = false
 
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+-- Ensure the persistent undo directory exists before enabling undofile
+local undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.fn.mkdir(undodir, "p")
+vim.opt.undodir = undodir
 vim.opt.undofile = true
 
 vim.opt.hlsearch = false
@@ -30,6 +33,13 @@ vim.opt.isfname:append("@-@")
 vim.opt.updatetime = 50
 
 vim.opt.clipboard = "unnamedplus"
+
+-- Register .gotmpl so gopls attaches automatically and :checkhealth vim.lsp recognizes it
+vim.filetype.add({
+   extension = {
+      gotmpl = "gotmpl",
+   },
+})
 
 -- vim.opt.colorcolumn = "80"
 

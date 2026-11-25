@@ -1,116 +1,205 @@
-return {
-   {
-      "VonHeikemen/lsp-zero.nvim",
-      branch = "v3.x",
-      lazy = true,
-      config = false,
-      init = function()
-         -- Disable automatic setup, do it manually later:
-         vim.g.lsp_zero_extend_cmp = 0
-         vim.g.lsp_zero_extend_lspconfig = 0
-      end
+local pack = require("nikita.pack")
+
+-- Diagnostics: show inline virtual text on the current cursor line only,
+-- truncated to 1 line / 80 chars so the screen stays uncluttered.
+-- Gutter signs and underlines still mark all lines; <leader>vd shows the full float.
+vim.diagnostic.config({
+   severity_sort = true,
+   virtual_text = {
+      current_line = true, -- remove this line to show virtual text on all lines
+      spacing = 2,
+      source = "if_many",
+      format = function(diagnostic)
+         -- Show first line only and truncate by UTF-8 characters (not bytes)
+         local msg = diagnostic.message:gsub("\n.*", "")
+         if vim.fn.strchars(msg) > 80 then
+            return vim.fn.strcharpart(msg, 0, 79) .. "…"
+         end
+         return msg
+      end,
    },
-
-   -- Install & manage LSP servers:
-   {
-      "mason-org/mason.nvim",
-      lazy = false,
-      config = true,
-      version = "^1.0.0",
-   }, -- needs mason-lspconfig to integrate with lspconfig.
-   
-   -- Autocompletion plugins:
-   {
-      "hrsh7th/nvim-cmp",
-      event = "InsertEnter", -- load cmp on InsertEnter
-      dependencies = {
-         {
-            "L3MON4D3/LuaSnip",
-            dependencies = { "rafamadriz/friendly-snippets" },
-         },
-      },
-      config = function()
-         -- Autocompletion settings:
-         local lsp_zero = require("lsp-zero")
-         lsp_zero.extend_cmp()
-
-         local cmp = require("cmp")
-         local cmp_select = {behavior = cmp.SelectBehavior.Select}
-
-         cmp.setup({
-            sources = {
-               {name = "path"},
-               {name = "nvim_lsp"},
-               {name = "nvim_lua"},
-               {name = "luasnip", keyword_length = 2},
-               {name = "buffer", keyword_length = 3},
-            },
-            formatting = lsp_zero.cmp_format(),
-            mapping = cmp.mapping.preset.insert({
-               ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
-               ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
-               ["<CR>"] = cmp.mapping.confirm({ select = true }),
-               ["<C-e>"] = cmp.mapping.abort(),
-               ["<C-Space>"] = cmp.mapping.complete(),
-            })
-         })
-      end
+   float = {
+      border = "rounded",
+      source = "if_many",
    },
+})
 
-   -- LSP:
-   {
-      "neovim/nvim-lspconfig",
-      cmd = {"LspInfo", "LspInstall", "LspStart"},
-      event = { "BufReadPre", "BufNewFile" },
-      dependencies = {
-         { "hrsh7th/cmp-nvim-lsp" },
-         { "hrsh7th/cmp-buffer" },
-         { "hrsh7th/cmp-path" },
-         { "saadparwaiz1/cmp_luasnip" },
-         { "hrsh7th/cmp-nvim-lua" },
-         { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
-      },
-      config = function()
-         local lsp_zero = require("lsp-zero")
-         lsp_zero.extend_lspconfig()
+-- Buffer-local LSP keymaps attached whenever any LSP client attaches
+vim.api.nvim_create_autocmd("LspAttach", {
+   group = vim.api.nvim_create_augroup("nikita_lsp_attach", { clear = true }),
+   callback = function(ev)
+      local opts = { buf = ev.buf, remap = false }
+      vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+      vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+      vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+      vim.keymap.set("n", "<leader>ws", vim.lsp.buf.workspace_symbol, opts)
+      vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
+      vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+      vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, opts)
+      vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+      vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
+   end,
+})
 
-         lsp_zero.on_attach(function(client, bufnr)
-            local opts = {buffer = bufnr, remap = false}
-            vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, opts)
-            vim.keymap.set("n", "gD", function() vim.lsp.buf.declaration() end, opts)
-            vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, opts)
-            vim.keymap.set("n", "<leader>ws", function() vim.lsp.buf.workspace_symbol() end, opts)
-            vim.keymap.set("n", "<leader>vd", function() vim.diagnostic.open_float() end, opts)
-            -- vim.keymap.set("n", "[d", function() vim.diagnostic.goto_next() end, opts)
-            -- vim.keymap.set("n", "]d", function() vim.diagnostic.goto_prev() end, opts)
-            vim.keymap.set("n", "<leader>ca", function() vim.lsp.buf.code_action() end, opts)
-            vim.keymap.set("n", "<leader>gr", function() vim.lsp.buf.references() end, opts)
-            vim.keymap.set("n", "<leader>rn", function() vim.lsp.buf.rename() end, opts)
-            vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
-         end)
-
-         lsp_zero.format_on_save({
-            format_opts = {
-               async = false,
-               timeout_ms = 10000,
-            },
-            servers = {
-               ["clangd"] = { "c", "cpp" }, 
-               ["gopls"] = { "go" },
-            },
-         })
-
-         require("mason-lspconfig").setup({
-            ensure_installed = { "clangd", "gopls", "ts_ls" },
-            handlers = {
-               lsp_zero.default_setup,
-               lua_ls = function()
-                  local lua_opts = lsp_zero.nvim_lua_ls()
-                  require('lspconfig').lua_ls.setup(lua_opts)
-               end,
-            }
-         })
-      end
-   }
+-- Format on save for C/C++ (clangd) and Go (gopls)
+local format_on_save_servers = {
+   c = "clangd",
+   cpp = "clangd",
+   go = "gopls",
 }
 
+vim.api.nvim_create_autocmd("BufWritePre", {
+   group = vim.api.nvim_create_augroup("nikita_lsp_format", { clear = true }),
+   callback = function(ev)
+      local server = format_on_save_servers[vim.bo[ev.buf].filetype]
+      if not server then
+         return
+      end
+
+      local clients = vim.lsp.get_clients({ bufnr = ev.buf, name = server })
+      if #clients == 0 then
+         return
+      end
+
+      vim.lsp.buf.format({
+         bufnr = ev.buf,
+         async = false,
+         timeout_ms = 10000,
+         filter = function(client)
+            return client.name == server
+         end,
+      })
+   end,
+})
+
+-- Lazy-load Mason + nvim-lspconfig on first file open or LSP/Mason command.
+-- Note: :LspInstall and :LspUninstall are provided natively by mason-lspconfig.
+pack.defer({
+   event = { "BufReadPre", "BufNewFile" },
+   cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUpdate", "MasonLog", "LspInstall", "LspUninstall", "LspUpdate" },
+   load = function()
+      -- Load cmp-nvim-lsp without sourcing its after/plugin yet (nvim-cmp loads on InsertEnter)
+      pack.load("cmp-nvim-lsp", { after_plugin = false })
+      pack.load({ "nvim-lspconfig", "mason.nvim", "mason-lspconfig.nvim" })
+
+      -- Pass nvim-cmp capabilities to all LSP servers
+      vim.lsp.config("*", {
+         capabilities = require("cmp_nvim_lsp").default_capabilities(),
+      })
+
+      -- Neovim-aware configuration for lua_ls
+      vim.lsp.config("lua_ls", {
+         settings = {
+            Lua = {
+               runtime = { version = "LuaJIT" },
+               diagnostics = { globals = { "vim" } },
+               workspace = {
+                  checkThirdParty = false,
+                  library = vim.api.nvim_get_runtime_file("", true),
+               },
+               telemetry = { enable = false },
+            },
+         },
+      })
+
+      require("mason").setup({
+         ui = { border = "rounded" },
+      })
+
+      -- Install servers on demand (ensure_installed = {}); anything installed via
+      -- Mason is automatically enabled using native `vim.lsp.enable()`.
+      require("mason-lspconfig").setup({
+         ensure_installed = {},
+         automatic_enable = true,
+      })
+
+      -- Also enable common servers if already installed on the system PATH
+      local system_servers = {
+         clangd = "clangd",
+         gopls = "gopls",
+         ts_ls = "typescript-language-server",
+         lua_ls = "lua-language-server",
+      }
+      for server, bin in pairs(system_servers) do
+         if vim.fn.executable(bin) == 1 then
+            vim.lsp.enable(server)
+         end
+      end
+
+      -- Resolve an lspconfig server name (e.g. "ts_ls", "lua_ls") to its Mason package name
+      local function to_mason_name(name)
+         local ok, mappings = pcall(require, "mason-lspconfig.mappings")
+         if ok and mappings.get_mason_map then
+            local lsp_to_pkg = mappings.get_mason_map().lspconfig_to_package
+            if lsp_to_pkg and lsp_to_pkg[name] then
+               return lsp_to_pkg[name]
+            end
+         end
+         return name
+      end
+
+      -- :LspUpdate [server...] — refresh Mason registry and update installed LSPs
+      vim.api.nvim_create_user_command("LspUpdate", function(args)
+         local registry = require("mason-registry")
+         vim.notify("Refreshing Mason registry...", vim.log.levels.INFO)
+
+         registry.refresh(vim.schedule_wrap(function()
+            local targets = {}
+            if #args.fargs > 0 then
+               for _, arg in ipairs(args.fargs) do
+                  local pkg_name = to_mason_name(arg)
+                  local ok, pkg = pcall(registry.get_package, pkg_name)
+                  if ok then
+                     table.insert(targets, pkg)
+                  else
+                     vim.notify("Unknown Mason package: " .. arg, vim.log.levels.WARN)
+                  end
+               end
+            else
+               targets = registry.get_installed_packages()
+            end
+
+            if #targets == 0 then
+               vim.notify("No installed Mason LSP packages to update.", vim.log.levels.INFO)
+               return
+            end
+
+            local updated = 0
+            for _, pkg in ipairs(targets) do
+               local installed = pkg:get_installed_version()
+               -- pcall guards against malformed package URLs; skip if already installing
+               local ok_latest, latest = pcall(pkg.get_latest_version, pkg)
+               if ok_latest and installed ~= latest and not pkg:is_installing() then
+                  updated = updated + 1
+                  vim.notify(
+                     string.format("Updating %s (%s -> %s)...", pkg.name, installed or "?", latest or "?"),
+                     vim.log.levels.INFO
+                  )
+                  -- Use install callback (not :once("closed")) to distinguish success vs failure
+                  pkg:install(nil, vim.schedule_wrap(function(success)
+                     if success then
+                        vim.notify("Updated " .. pkg.name, vim.log.levels.INFO)
+                     else
+                        vim.notify("Failed to update " .. pkg.name, vim.log.levels.ERROR)
+                     end
+                  end))
+               end
+            end
+
+            if updated == 0 then
+               vim.notify("All installed Mason LSP packages are already up to date.", vim.log.levels.INFO)
+            end
+         end))
+      end, {
+         nargs = "*",
+         desc = "Update installed LSP servers via Mason",
+         complete = function(arg_lead)
+            local ok, mlsp = pcall(require, "mason-lspconfig")
+            local servers = ok and mlsp.get_installed_servers and mlsp.get_installed_servers() or {}
+            return vim.tbl_filter(function(s)
+               return vim.startswith(s, arg_lead)
+            end, servers)
+         end,
+      })
+   end,
+})

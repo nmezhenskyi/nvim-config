@@ -1,8 +1,13 @@
-return {
-   -- Git commands support:
-   "tpope/vim-fugitive",
-   config = function()
-      vim.keymap.set('n', '<leader>gs', vim.cmd.Git)
-   end,
-}
+local pack = require("nikita.pack")
 
+local load_fugitive = pack.defer({
+   cmd = { "Git", "G" },
+   load = function()
+      pack.load("vim-fugitive")
+   end,
+})
+
+vim.keymap.set("n", "<leader>gs", function()
+   load_fugitive()
+   vim.cmd.Git()
+end, { desc = "Fugitive Git status" })
